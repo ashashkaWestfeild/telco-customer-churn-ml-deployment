@@ -91,6 +91,7 @@ An interactive **Streamlit web application** was developed to demonstrate the ma
 
 ## 7. Project Structure
 
+```text
 telco-customer-churn-ml-deployment/
 │
 ├── data/
