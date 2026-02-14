@@ -99,6 +99,7 @@ telco-customer-churn-ml-deployment/
 │ └── processed_telco.csv
 │
 ├── model/
+<<<<<<< HEAD
 │ ├── logistic_regression.py
 │ ├── decision_tree.py
 │ ├── knn.py
@@ -108,6 +109,23 @@ telco-customer-churn-ml-deployment/
 │
 ├── notebooks/
 │ └── eda.ipynb
+=======
+│ ├── scalar.pkl
+│ ├── logistic_regression.pkl
+│ ├── decision_tree.pkl
+│ ├── knn.pkl
+│ ├── naive_bayes.pkl
+│ ├── random_forest.pkl
+│ ├── xgboost.pkl
+│ └── metrics.csv
+│
+├── notebooks/
+│ ├── eda.ipynb
+│ └── model_training.ipynb
+│
+├── scripts/
+│ └── train.py
+>>>>>>> 1dcaa77 (Almost 80%-90% complete)
 │
 ├── app.py
 ├── requirements.txt
