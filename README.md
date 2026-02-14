@@ -127,7 +127,7 @@ telco-customer-churn-ml-deployment/
 ## 8. Deployment
 The application is deployed using **Streamlit Community Cloud**.
 
-- **GitHub Repository:** *(To be added)*
+- **GitHub Repository:** *https://github.com/ashashkaWestfeild/telco-customer-churn-ml-deployment*
 - **Live Streamlit App:** *(To be added)*
 
 ---
