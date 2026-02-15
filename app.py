@@ -101,6 +101,8 @@ elif page == "Prediction":
     input_data = {}
     col1, col2, col3 = st.columns(3)
     
+    feature_cols = df.drop('Churn', axis=1).columns.tolist()
+    
     for i, col in enumerate(feature_cols):
         with [col1, col2, col3][i % 3]:
             if df[col].nunique() < 10:
