@@ -5,7 +5,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import joblib
+
 import os
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
 # Set page config
 st.set_page_config(page_title="Telco Customer Churn Prediction", layout="wide")
@@ -92,28 +94,15 @@ elif page == "Model Comparison":
 elif page == "Prediction":
     st.title("Customer Churn Prediction")
     
-    st.header("Enter Customer Details")
+    st.header("Single Customer Prediction")
     
-    # Create input fields for features
-    # Note: We need to match the features used in training.
-    # Looking at processed_telco.csv columns would be best, but generic assumption for now based on Telco dataset
-    
-    # For simplicity in this assignment restoration, we'll assume the user needs to input values 
-    # corresponding to the features expected by the model. 
-    # Since we used processed_telco.csv, features are already encoded/numerical.
-    # A real-world app would take raw inputs and preprocess them. 
-    # given the constraints of "restoration", I will inspect X columns from the training script logic 
-    # to create inputs.
-    # Training script: X = df.drop('Churn', axis=1)
-    
-    feature_cols = df.drop('Churn', axis=1).columns.tolist()
+    # ... (Keep existing single prediction logic) ...
     
     input_data = {}
     col1, col2, col3 = st.columns(3)
     
     for i, col in enumerate(feature_cols):
         with [col1, col2, col3][i % 3]:
-            # Use appropriate input widgets based on data type estimate
             if df[col].nunique() < 10:
                  input_data[col] = st.selectbox(f"Select {col}", sorted(df[col].unique()))
             else:
@@ -121,15 +110,10 @@ elif page == "Prediction":
                  
     selected_model_name = st.selectbox("Select Model", list(models.keys()))
     
-    if st.button("Predict"):
+    if st.button("Predict Single Customer"):
         if scaler and models:
-            # Prepare input
             input_df = pd.DataFrame([input_data])
-            
-            # Scale
             input_scaled = scaler.transform(input_df)
-            
-            # Predict
             model = models[selected_model_name]
             prediction = model.predict(input_scaled)[0]
             probability = model.predict_proba(input_scaled)[0][1] if hasattr(model, "predict_proba") else None
@@ -140,3 +124,84 @@ elif page == "Prediction":
                 st.success(f"Prediction: No Churn (Probability: {probability:.2f})" if probability else "Prediction: No Churn")
         else:
              st.error("Models or Scaler not loaded.")
+
+    st.markdown("---")
+    st.header("Batch Prediction (Upload CSV)")
+
+    # Sample CSV for user documentation
+    sample_csv = df.drop('Churn', axis=1).head(5).to_csv(index=False).encode('utf-8')
+
+    st.download_button(
+        label="Download Sample CSV for Testing",
+        data=sample_csv,
+        file_name="sample_telco_churn_test.csv",
+        mime="text/csv",
+    )
+
+    uploaded_file = st.file_uploader("Upload your CSV file for batch prediction", type=["csv"])
+
+    if uploaded_file is not None:
+        try:
+            input_df_batch = pd.read_csv(uploaded_file)
+            st.write("Uploaded Data Preview:", input_df_batch.head())
+
+            # Check if all required columns are present
+            missing_cols = [col for col in feature_cols if col not in input_df_batch.columns]
+            
+            if missing_cols:
+                st.error(f"Error: The uploaded CSV is missing the following required columns: {missing_cols}")
+            else:
+                if st.button("Predict Batch"):
+                    if scaler and models:
+                        # Preprocess and Scale
+                        # Ensure columns are in the same order
+                        input_batch_processed = input_df_batch[feature_cols]
+                        input_batch_scaled = scaler.transform(input_batch_processed)
+
+                        # Predict
+                        model = models[selected_model_name]
+                        predictions = model.predict(input_batch_scaled)
+                        probabilities = model.predict_proba(input_batch_scaled)[:, 1] if hasattr(model, "predict_proba") else [None] * len(predictions)
+
+                        # Add predictions to dataframe
+                        results_df = input_df_batch.copy()
+                        results_df['Prediction'] = ["Churn" if p == 1 else "No Churn" for p in predictions]
+                        if probabilities[0] is not None:
+                             results_df['Churn Probability'] = probabilities
+
+
+
+                        st.subheader("Batch Prediction Results")
+                        st.write(results_df)
+
+                        if 'Churn' in input_df_batch.columns:
+                            st.subheader("Batch Evaluation (Ground Truth Available)")
+                            y_true = input_df_batch['Churn']
+                            y_pred = predictions
+                            
+                            acc = accuracy_score(y_true, y_pred)
+                            st.write(f"**Accuracy on Uploaded Data:** {acc:.4f}")
+                            
+                            st.write("**Classification Report:**")
+                            st.code(classification_report(y_true, y_pred))
+                            
+                            st.write("**Confusion Matrix:**")
+                            cm = confusion_matrix(y_true, y_pred)
+                            fig, ax = plt.subplots()
+                            sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=ax)
+                            st.pyplot(fig)
+
+                        # Download results
+                        csv_results = results_df.to_csv(index=False).encode('utf-8')
+                        st.download_button(
+                            label="Download Predictions",
+                            data=csv_results,
+                            file_name="churn_predictions.csv",
+                            mime="text/csv",
+                        )
+
+                    else:
+                        st.error("Models or Scaler not loaded.")
+
+        except Exception as e:
+            st.error(f"Error processing file: {e}")
